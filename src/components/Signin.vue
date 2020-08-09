@@ -56,8 +56,6 @@ export default {
       if (that.isInit) clearInterval(checkGauthLoad);
       if (that.isSignIn) {
         this.$router.push({name : 'home',  params : {'access_token' : this.$gAuth.GoogleAuth.currentUser.get().getAuthResponse().access_token}});
-      } else {
-        this.$router.push('/')
       }
     }, 1000);
   },
