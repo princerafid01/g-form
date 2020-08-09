@@ -139,9 +139,8 @@ import Swal from 'sweetalert2'
                 });
             },
             addData(){
+                nprogress.start()
                 axios.post(`${this.base_url}/spreadsheets/${this.formData.sheet}/values:batchUpdate`,{
-                    // spreadsheetId: this.formData.sheet,
-                    // resource:{
                         valueInputOption: "RAW",
                         data:[
                         {
@@ -165,15 +164,23 @@ import Swal from 'sweetalert2'
                             values: [[this.formData.mobile]]
                         },
                         ]
-                    // }
                 },{
                     headers: {
                         'Content-Type': 'application/json',
                         "Authorization": `Bearer ${this.access_token}`
                     }
                 })
-                .then(({data}) => {
-                    console.log(data)
+                .then(() => {
+                    nprogress.done()
+                    Swal.fire(
+                        'Created!',
+                        'You have a created a sheet!',
+                        'success'
+                    );
+                    this.formData.name = null
+                    this.formData.profession = null
+                    this.formData.mobile = null
+                    this.formData.sheet = null
                 });
 
             }
