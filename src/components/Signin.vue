@@ -6,6 +6,7 @@
       </v-col>
 
       <v-col class="mb-4">
+        <h1>Sign up and start editing on your google sheet</h1>
         <v-btn color="primary" @click="handleClickSignIn" v-if="!isSignIn" :disabled="!isInit">
           <v-icon>mdi-pencil</v-icon>Sign in
         </v-btn>
@@ -36,6 +37,10 @@ export default {
           "getAuthResponse",
           this.$gAuth.GoogleAuth.currentUser.get().getAuthResponse()
         );
+
+        this.$router.push({name : 'home',  params : {'access_token' : this.$gAuth.GoogleAuth.currentUser.get().getAuthResponse().access_token}});
+
+        // this.$gAuth.GoogleAuth.currentUser.get().getAuthResponse().access_token
         this.isSignIn = this.$gAuth.isAuthorized;
       } catch (error) {
         //on fail do something
@@ -43,12 +48,17 @@ export default {
       }
     },
   },
-  created() {
+  mounted() {
     let that = this;
-    let checkGauthLoad = setInterval(function () {
+    let checkGauthLoad = setInterval(() => {
       that.isInit = that.$gAuth.isInit;
       that.isSignIn = that.$gAuth.isAuthorized;
       if (that.isInit) clearInterval(checkGauthLoad);
+      if (that.isSignIn) {
+        this.$router.push({name : 'home',  params : {'access_token' : this.$gAuth.GoogleAuth.currentUser.get().getAuthResponse().access_token}});
+      } else {
+        this.$router.push('/')
+      }
     }, 1000);
   },
 };

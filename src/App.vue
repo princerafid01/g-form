@@ -1,20 +1,15 @@
 <template>
   <v-app>
     <v-main>
-      <Signin/>
+      <router-view/>
     </v-main>
   </v-app>
 </template>
 
 <script>
-import Signin from './components/Signin';
 
 export default {
-  name: 'App',
 
-  components: {
-    Signin,
-  },
 
   data: () => ({
     //
