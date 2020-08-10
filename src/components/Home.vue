@@ -55,6 +55,17 @@
                     <v-text-field class="mt-4" label="Profession" :rules="FormRules" v-model="formData.profession" hide-details="auto"></v-text-field>
                     <v-text-field class="mt-4" label="Mobile" :rules="FormRules" v-model="formData.mobile" hide-details="auto"></v-text-field>
                     <v-select :items="sheets" item-text="name" item-value="id" class="mt-4" label="Google Sheets" v-model="formData.sheet"></v-select>
+
+                    <v-row v-if="formData.sheet">
+                        <v-col cols="12">
+                            <h3>Add a Header on the sheet</h3>
+                        </v-col>
+                            <v-text-field class=" ml-3" label="Column 1" v-model="formHeader.col1" hide-details="auto"></v-text-field>
+                            <v-text-field class="" label="Column 2"  v-model="formHeader.col2" hide-details="auto"></v-text-field>
+                            <v-text-field class="" label="Column 3"  v-model="formHeader.col3" hide-details="auto"></v-text-field>
+                    </v-row>
+
+
                     <v-btn  color="success" dark class="mt-5" @click="addData">Add Data</v-btn>
                 </v-col>
             </v-row>
@@ -84,6 +95,11 @@ import Swal from 'sweetalert2'
                     mobile : null,
                     sheet: null
                 },
+                formHeader: {
+                    col1 : null,
+                    col2 : null,
+                    col3 : null,
+                },
                 rules: [
                     TitleRules => !!TitleRules || 'Required.',
                     FormRules => !!FormRules || 'Required.',
@@ -94,6 +110,16 @@ import Swal from 'sweetalert2'
             access_token: {
                 type: String,
             },
+        },
+        computed: {
+            isSignin() {
+                return this.$gAuth.isAuthorized
+            }
+        },
+        watch: {
+            isSignin(newValue) {
+                if(!newValue) this.$router.push('/')
+            }
         },
         methods: {
             signout() {
@@ -140,29 +166,34 @@ import Swal from 'sweetalert2'
             },
             addData(){
                 nprogress.start()
-                axios.post(`${this.base_url}/spreadsheets/${this.formData.sheet}/values:batchUpdate`,{
-                        valueInputOption: "RAW",
-                        data:[
-                        {
-                            range: "Sheet1!A1",
-                            values: [["Name"]]
-                        }, {
-                            range: "Sheet1!B1",
-                            values: [["Profession"]]
-                        }, {
-                            range: "Sheet1!C1",
-                            values: [["Mobile"]]
-                        },
-                        {
-                            range: "Sheet1!A2",
-                            values: [[this.formData.name]]
-                        }, {
-                            range: "Sheet1!B2",
-                            values: [[this.formData.profession]]
-                        }, {
-                            range: "Sheet1!C2",
-                            values: [[this.formData.mobile]]
-                        },
+
+                // if anyone want to add a header
+                if(this.formHeader.col1 && this.formHeader.col2 && this.formHeader.col3){
+                    axios.post(`${this.base_url}/spreadsheets/${this.formData.sheet}/values:batchUpdate`,{
+                            valueInputOption: "RAW",
+                            data:[
+                            {
+                                range: "Sheet1!A1",
+                                values: [[this.formHeader.col1]]
+                            }, {
+                                range: "Sheet1!B1",
+                                values: [[this.formHeader.col2]]
+                            }, {
+                                range: "Sheet1!C1",
+                                values: [[this.formHeader.col3]]
+                            },
+                            ]
+                    },{
+                        headers: {
+                            'Content-Type': 'application/json',
+                            "Authorization": `Bearer ${this.access_token}`
+                        }
+                    });
+                }
+
+                axios.post(`${this.base_url}/spreadsheets/${this.formData.sheet}/values/A1:C1:append?valueInputOption=RAW`,{
+                        "values": [
+                            [ this.formData.name, this.formData.profession, this.formData.mobile]
                         ]
                 },{
                     headers: {
@@ -173,19 +204,24 @@ import Swal from 'sweetalert2'
                 .then(() => {
                     nprogress.done()
                     Swal.fire(
-                        'Created!',
-                        'You have a created a sheet!',
+                        'Successfull!',
+                        'You have a inserted data on this sheet!',
                         'success'
                     );
                     this.formData.name = null
                     this.formData.profession = null
                     this.formData.mobile = null
                     this.formData.sheet = null
-                });
+                    this.formHeader.col1 = null
+                    this.formHeader.col2 = null
+                    this.formHeader.col3 = null
+                })
+                .catch(() => nprogress.done() )
 
             }
         },
         mounted () {
+            if(!this.$gAuth.isAuthorized) this.$router.push('/')
             this.loadSheet();
         },
     }
