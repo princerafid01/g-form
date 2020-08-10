@@ -27,7 +27,7 @@
                     </v-card-title>
 
                     <v-card-text>
-                        <v-text-field label="Title" :rules="TitleRules" hide-details="auto" v-model="newTitle"></v-text-field>
+                        <v-text-field label="Title"  hide-details="auto" v-model="newTitle"></v-text-field>
                     </v-card-text>
 
                     <v-divider></v-divider>
@@ -51,10 +51,10 @@
         <v-container class="mt-5">
             <v-row class="mt-5">
                 <v-col cols="12" class="mt-5">
-                    <v-text-field class="mt-4" label="Name" :rules="FormRules" v-model="formData.name" hide-details="auto"></v-text-field>
-                    <v-text-field class="mt-4" label="Profession" :rules="FormRules" v-model="formData.profession" hide-details="auto"></v-text-field>
-                    <v-text-field class="mt-4" label="Mobile" :rules="FormRules" v-model="formData.mobile" hide-details="auto"></v-text-field>
-                    <v-select :items="sheets" item-text="name" item-value="id" class="mt-4" label="Google Sheets" v-model="formData.sheet"></v-select>
+                    <v-text-field class="mt-4" label="Name" v-model="formData.name" hide-details="auto"></v-text-field>
+                    <v-text-field class="mt-4" label="Profession" v-model="formData.profession" hide-details="auto"></v-text-field>
+                    <v-text-field class="mt-4" label="Mobile" v-model="formData.mobile" hide-details="auto"></v-text-field>
+                    <v-select :items="sheets" item-text="name" item-value="id" class="mt-4" label="Google Sheets" v-model="formData.sheet" @change="fetchFormHeader"></v-select>
 
                     <v-row v-if="formData.sheet">
                         <v-col cols="12">
@@ -126,6 +126,19 @@ import Swal from 'sweetalert2'
                 this.$gAuth.signOut()
                 this.$router.push('/')
             },
+            fetchFormHeader(){
+                nprogress.start();
+                axios.get(`${this.base_url}/spreadsheets/${this.formData.sheet}/values/Sheet1!A1:C1`,{
+                headers: {
+                    'Content-Type': 'application/json',
+                    "Authorization": `Bearer ${this.access_token}`
+                }
+                })
+                .then(({data}) => {
+                    nprogress.done();
+                    if(data.values)  [this.formHeader.col1, this.formHeader.col2 , this.formHeader.col3 ] =  data.values[0];
+                });
+            },
             createSheet(){
                 nprogress.start()
                 this.dialog = false
@@ -162,14 +175,15 @@ import Swal from 'sweetalert2'
                 })
                 .then(({data}) => {
                     this.sheets = data.files
+                    this.resetData();
                 });
             },
-            addData(){
+            async addData(){
                 nprogress.start()
 
                 // if anyone want to add a header
                 if(this.formHeader.col1 && this.formHeader.col2 && this.formHeader.col3){
-                    axios.post(`${this.base_url}/spreadsheets/${this.formData.sheet}/values:batchUpdate`,{
+                    await axios.post(`${this.base_url}/spreadsheets/${this.formData.sheet}/values:batchUpdate`,{
                             valueInputOption: "RAW",
                             data:[
                             {
@@ -191,7 +205,7 @@ import Swal from 'sweetalert2'
                     });
                 }
 
-                axios.post(`${this.base_url}/spreadsheets/${this.formData.sheet}/values/A1:C1:append?valueInputOption=RAW`,{
+                await axios.post(`${this.base_url}/spreadsheets/${this.formData.sheet}/values/A1:C1:append?valueInputOption=RAW`,{
                         "values": [
                             [ this.formData.name, this.formData.profession, this.formData.mobile]
                         ]
@@ -208,16 +222,19 @@ import Swal from 'sweetalert2'
                         'You have a inserted data on this sheet!',
                         'success'
                     );
-                    this.formData.name = null
-                    this.formData.profession = null
-                    this.formData.mobile = null
-                    this.formData.sheet = null
-                    this.formHeader.col1 = null
-                    this.formHeader.col2 = null
-                    this.formHeader.col3 = null
+                    this.resetData();
                 })
                 .catch(() => nprogress.done() )
 
+            },
+            resetData(){
+                this.formData.name = null
+                this.formData.profession = null
+                this.formData.mobile = null
+                this.formData.sheet = null
+                this.formHeader.col1 = null
+                this.formHeader.col2 = null
+                this.formHeader.col3 = null
             }
         },
         mounted () {

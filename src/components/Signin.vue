@@ -28,19 +28,7 @@ export default {
   methods: {
     async handleClickSignIn() {
       try {
-        const googleUser = await this.$gAuth.signIn();
-        console.log("googleUser", googleUser);
-        console.log("getId", googleUser.getId());
-        console.log("getBasicProfile", googleUser.getBasicProfile());
-        console.log("getAuthResponse", googleUser.getAuthResponse());
-        console.log(
-          "getAuthResponse",
-          this.$gAuth.GoogleAuth.currentUser.get().getAuthResponse()
-        );
-
         this.$router.push({name : 'home',  params : {'access_token' : this.$gAuth.GoogleAuth.currentUser.get().getAuthResponse().access_token}});
-
-        // this.$gAuth.GoogleAuth.currentUser.get().getAuthResponse().access_token
         this.isSignIn = this.$gAuth.isAuthorized;
       } catch (error) {
         //on fail do something
