@@ -7,7 +7,7 @@
 
       <v-col class="mb-4">
         <h1>Sign up and start editing on your google sheet</h1>
-        <v-btn color="primary" @click="handleClickSignIn" v-if="!isSignIn" :disabled="!isInit">
+        <v-btn color="primary" @click="onGoogleAuthSuccess">
           <v-icon>mdi-pencil</v-icon>Sign in
         </v-btn>
       </v-col>
@@ -23,29 +23,56 @@ export default {
     return {
       isInit: false,
       isSignIn: false,
+      clientId: process.env.VUE_APP_GOOGLE_CLIENT_ID
     };
   },
   methods: {
-    async handleClickSignIn() {
+    async SignUpUser() {
+        const client = window.google.accounts.oauth2.initTokenClient({
+            client_id: this.clientId,
+            scope:
+            "https://www.googleapis.com/auth/spreadsheets \
+            https://www.googleapis.com/auth/drive \
+            https://www.googleapis.com/auth/drive.file",
+            callback: "", // defined at request time
+        });
+        const tokenResponse = await new Promise((resolve, reject) => {
+            try {
+                // Settle this promise in the response callback for requestAccessToken()
+                client.callback = (resp) => {
+                    if (resp.error !== undefined) {
+                    reject(resp);
+                    }
+
+                    // console.log("client resp",resp);
+                    resolve(resp);
+                };
+                // console.log("client",client);
+                client.requestAccessToken({ prompt: "consent" });
+            } catch (err) {
+                console.log(err);
+            }
+        });
+        return tokenResponse;
+    },
+    async onGoogleAuthSuccess(){
       try {
-        this.$router.push({name : 'home',  params : {'access_token' : this.$gAuth.GoogleAuth.currentUser.get().getAuthResponse().access_token}});
-        this.isSignIn = this.$gAuth.isAuthorized;
+        const data = await this.SignUpUser();
+        this.isSignIn = true;
+        window.localStorage.setItem('access_token', data.access_token);
+
+        this.$router.push({name : 'home',  params : {'access_token' : data.access_token}});
       } catch (error) {
         //on fail do something
         console.error(error);
       }
-    },
+        
+    }
   },
   mounted() {
-    let that = this;
-    let checkGauthLoad = setInterval(() => {
-      that.isInit = that.$gAuth.isInit;
-      that.isSignIn = that.$gAuth.isAuthorized;
-      if (that.isInit) clearInterval(checkGauthLoad);
-      if (that.isSignIn) {
-        this.$router.push({name : 'home',  params : {'access_token' : this.$gAuth.GoogleAuth.currentUser.get().getAuthResponse().access_token}});
-      }
-    }, 1000);
+	if(window.localStorage.getItem('access_token')){
+        this.$router.push({name : 'home',  params : {'access_token' : window.localStorage.getItem('access_token')}});
+	}
   },
 };
 </script>

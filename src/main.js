@@ -1,7 +1,6 @@
 import Vue from 'vue'
 import App from './App.vue'
 import vuetify from './plugins/vuetify';
-import GAuth from 'vue-google-oauth2'
 import VueRouter from 'vue-router'
 import 'nprogress/nprogress.css'
 
@@ -11,14 +10,6 @@ import Home from './components/Home'
 
 Vue.config.productionTip = false
 
-const gauthOption = {
-  clientId: process.env.VUE_APP_GOOGLE_CLIENT_ID,
-  scope: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/drive.file',
-  prompt: 'consent',
-  fetch_basic_profile: false
-}
-
-Vue.use(GAuth, gauthOption)
 Vue.use(VueRouter)
 
 

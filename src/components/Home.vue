@@ -17,7 +17,7 @@
             <v-dialog v-model="dialog" width="500">
                 <template v-slot:activator="{ on, attrs }">
                     <v-btn  color="blue lighten-2" dark v-bind="attrs" v-on="on" class="float-right mt-5">
-                        Create
+                        Create a New Sheet
                     </v-btn>
                 </template>
 
@@ -51,10 +51,7 @@
         <v-container class="mt-5">
             <v-row class="mt-5">
                 <v-col cols="12" class="mt-5">
-                    <v-text-field class="mt-4" label="Name" v-model="formData.name" hide-details="auto"></v-text-field>
-                    <v-text-field class="mt-4" label="Profession" v-model="formData.profession" hide-details="auto"></v-text-field>
-                    <v-text-field class="mt-4" label="Mobile" v-model="formData.mobile" hide-details="auto"></v-text-field>
-                    <v-select :items="sheets" item-text="name" item-value="id" class="mt-4" label="Google Sheets" v-model="formData.sheet" @change="fetchFormHeader"></v-select>
+                    <v-select :items="sheets" item-text="name" item-value="id" class="mt-4" label="Select a Google Sheets" v-model="formData.sheet" @change="fetchFormHeader"></v-select>
 
                     <v-row v-if="formData.sheet">
                         <v-col cols="12">
@@ -65,8 +62,20 @@
                             <v-text-field class="" label="Column 3"  v-model="formHeader.col3" hide-details="auto"></v-text-field>
                     </v-row>
 
+                    <v-row v-if="formData.sheet" class="mt-5">
+                        <v-col cols="12">
+                            <h3>Add your Data here</h3>
+                            <v-text-field class="mt-4" :label="formHeader.col1" v-model="formData.name" hide-details="auto"></v-text-field>
+                            <v-text-field class="mt-4" :label="formHeader.col2" v-model="formData.profession" hide-details="auto"></v-text-field>
+                            <v-text-field class="mt-4" :label="formHeader.col3" v-model="formData.mobile" hide-details="auto"></v-text-field>
+                        </v-col>
 
-                    <v-btn  color="success" dark class="mt-5" @click="addData">Add Data</v-btn>
+                    </v-row>
+
+                    
+
+
+                    <v-btn v-if="formData.sheet"  color="success" dark class="mt-5" @click="addData" :disabled="!formHeader.col1 || !formHeader.col2 || !formHeader.col3 || !formData.name || !formData.profession || !formData.mobile">Add Data</v-btn>
                 </v-col>
             </v-row>
         </v-container>
@@ -84,6 +93,7 @@ import Swal from 'sweetalert2'
     export default {
         data() {
             return {
+                access_token: window.localStorage.getItem('access_token') ?? null,
                 base_url : "https://sheets.googleapis.com/v4",
                 sheets_url: "https://www.googleapis.com/drive/v3/files?q=mimeType='application/vnd.google-apps.spreadsheet'",
                 sheets: null,
@@ -96,9 +106,9 @@ import Swal from 'sweetalert2'
                     sheet: null
                 },
                 formHeader: {
-                    col1 : null,
-                    col2 : null,
-                    col3 : null,
+                    col1 : 'col1',
+                    col2 : 'col2',
+                    col3 : 'col3',
                 },
                 rules: [
                     TitleRules => !!TitleRules || 'Required.',
@@ -106,14 +116,14 @@ import Swal from 'sweetalert2'
                 ],
             }
         },
-        props: {
-            access_token: {
-                type: String,
-            },
-        },
+        // props: {
+        //     access_token: {
+        //         type: String,
+        //     },
+        // },
         computed: {
             isSignin() {
-                return this.$gAuth.isAuthorized
+                return !!window.localStorage.getItem('access_token')
             }
         },
         watch: {
@@ -123,7 +133,7 @@ import Swal from 'sweetalert2'
         },
         methods: {
             signout() {
-                this.$gAuth.signOut()
+                window.localStorage.removeItem('access_token')
                 this.$router.push('/')
             },
             fetchFormHeader(){
@@ -238,7 +248,7 @@ import Swal from 'sweetalert2'
             }
         },
         mounted () {
-            if(!this.$gAuth.isAuthorized) this.$router.push('/')
+            if(!this.isSignin) this.$router.push('/')
             this.loadSheet();
         },
     }
