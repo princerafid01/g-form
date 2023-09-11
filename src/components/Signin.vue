@@ -70,9 +70,9 @@ export default {
     }
   },
   mounted() {
-	if(window.localStorage.getItem('access_token')){
-        this.$router.push({name : 'home',  params : {'access_token' : window.localStorage.getItem('access_token')}});
-	}
+    if(window.localStorage.getItem('access_token')){
+          this.$router.push({name : 'home',  params : {'access_token' : window.localStorage.getItem('access_token')}});
+    }
   },
 };
 </script>
