@@ -72,9 +72,6 @@
 
                     </v-row>
 
-                    
-
-
                     <v-btn v-if="formData.sheet"  color="success" dark class="mt-5" @click="addData" :disabled="!formHeader.col1 || !formHeader.col2 || !formHeader.col3 || !formData.name || !formData.profession || !formData.mobile">Add Data</v-btn>
                 </v-col>
             </v-row>
@@ -186,6 +183,9 @@ import Swal from 'sweetalert2'
                 .then(({data}) => {
                     this.sheets = data.files
                     this.resetData();
+                }).catch((error) => {
+                    console.log(error);
+                    this.signout();
                 });
             },
             async addData(){
